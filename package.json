@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@insforge/sdk": "^1.0.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",

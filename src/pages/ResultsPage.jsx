@@ -20,7 +20,8 @@ import {
   Cpu, 
   Download, 
   LayoutDashboard,
-  HelpCircle
+  HelpCircle,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../lib/insforge';
@@ -31,7 +32,8 @@ export default function ResultsPage({
   selectedSymptoms = [], 
   patientInfo, 
   viewOnlyReport, 
-  setActivePage 
+  setActivePage,
+  onOpenAskAi
 }) {
   const { user, profile } = useAuth();
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
@@ -204,6 +206,16 @@ This system provides educational, informational suggestions based on predefined 
         </button>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Prominent Ask AI / Explain Report Action */}
+          <button
+            onClick={() => onOpenAskAi && onOpenAskAi()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 hover:from-teal-500 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-teal-500/25 transition-all transform hover:-translate-y-0.5"
+            title="Ask AI to break down this report in plain language"
+          >
+            <Sparkles className="w-4 h-4 animate-pulse" />
+            Explain My Report
+          </button>
+
           <button
             onClick={() => setActivePage('dashboard')}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-slate-800 transition-colors"
@@ -359,6 +371,24 @@ This system provides educational, informational suggestions based on predefined 
               <span className="text-slate-400">Triage Recommendation:</span>
               <strong className="text-white">{reportData.triageLevel}</strong>
             </div>
+          </div>
+
+          {/* Explain with AI Prompt helper */}
+          <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+            <button
+              onClick={() => onOpenAskAi && onOpenAskAi()}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-semibold transition-all hover:scale-105"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+              Ask AI to Explain My Report in Simple Terms
+            </button>
+            <button
+              onClick={() => onOpenAskAi && onOpenAskAi()}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-teal-300 transition-colors"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-teal-400" />
+              What does {primary?.confidencePercentage || 0}% match mean?
+            </button>
           </div>
         </div>
 

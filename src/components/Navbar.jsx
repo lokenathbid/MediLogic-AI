@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Navbar({ activePage, setActivePage }) {
+export default function Navbar({ activePage, setActivePage, isAskAiOpen, onToggleAskAi }) {
   const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -38,7 +38,7 @@ export default function Navbar({ activePage, setActivePage }) {
   });
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
@@ -87,8 +87,23 @@ export default function Navbar({ activePage, setActivePage }) {
             })}
           </nav>
 
-          {/* Desktop Auth / User Area */}
+          {/* Desktop Right Side: Global Ask AI + Auth / User Area */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Global Ask AI Button */}
+            <button
+              onClick={onToggleAskAi}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 shadow-sm ${
+                isAskAiOpen
+                  ? 'bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 text-white shadow-teal-500/25 ring-2 ring-teal-400/50 scale-105'
+                  : 'bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:border-teal-500/50 hover:scale-105'
+              }`}
+              title="Open Ask AI Assistant Panel"
+              aria-label="Toggle Ask AI Assistant Panel"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-teal-300 animate-pulse" />
+              Ask AI
+            </button>
+
             {user ? (
               <div className="flex items-center gap-3">
                 <button
@@ -131,8 +146,20 @@ export default function Navbar({ activePage, setActivePage }) {
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile Right Controls: Ask AI + Hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={onToggleAskAi}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                isAskAiOpen
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-teal-500/10 text-teal-300 border border-teal-500/30'
+              }`}
+              title="Toggle Ask AI"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Ask AI
+            </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
@@ -204,3 +231,4 @@ export default function Navbar({ activePage, setActivePage }) {
     </header>
   );
 }
+
