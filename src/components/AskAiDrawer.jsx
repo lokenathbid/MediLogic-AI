@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { 
   Sparkles, 
   X, 
@@ -17,6 +20,82 @@ import {
   ArrowUp
 } from 'lucide-react';
 import { askAiService } from '../lib/aiService';
+
+// Markdown renderer component for AI messages with custom MediLogic theme styling
+function MarkdownMessage({ content }) {
+  if (!content) return null;
+  return (
+    <div className="text-xs text-slate-200 leading-relaxed">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        components={{
+          h1: ({ node, ...props }) => (
+            <h3 className="text-sm font-bold text-teal-300 mt-2.5 mb-1.5 first:mt-0 tracking-tight" {...props} />
+          ),
+          h2: ({ node, ...props }) => (
+            <h4 className="text-xs font-bold text-teal-300 mt-2.5 mb-1.5 first:mt-0 tracking-tight" {...props} />
+          ),
+          h3: ({ node, ...props }) => (
+            <h5 className="text-xs font-semibold text-teal-400 mt-2 mb-1 first:mt-0 tracking-tight" {...props} />
+          ),
+          h4: ({ node, ...props }) => (
+            <h6 className="text-xs font-semibold text-slate-200 mt-2 mb-1 first:mt-0" {...props} />
+          ),
+          p: ({ node, ...props }) => (
+            <p className="text-xs text-slate-200 leading-relaxed mb-2 last:mb-0" {...props} />
+          ),
+          strong: ({ node, ...props }) => (
+            <strong className="font-semibold text-white" {...props} />
+          ),
+          em: ({ node, ...props }) => (
+            <em className="italic text-teal-200" {...props} />
+          ),
+          ul: ({ node, ...props }) => (
+            <ul className="list-disc pl-4 space-y-1 mb-2 last:mb-0 text-xs text-slate-200 marker:text-teal-400" {...props} />
+          ),
+          ol: ({ node, ...props }) => (
+            <ol className="list-decimal pl-4 space-y-1 mb-2 last:mb-0 text-xs text-slate-200 marker:text-teal-400" {...props} />
+          ),
+          li: ({ node, ...props }) => (
+            <li className="leading-relaxed pl-0.5" {...props} />
+          ),
+          code: ({ node, inline, className, children, ...props }) => {
+            return (
+              <code className="bg-slate-800 text-teal-300 font-mono px-1 py-0.5 rounded text-[11px] border border-slate-700/50" {...props}>
+                {children}
+              </code>
+            );
+          },
+          pre: ({ node, ...props }) => (
+            <pre className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg my-2 overflow-x-auto text-[11px] font-mono text-slate-300" {...props} />
+          ),
+          blockquote: ({ node, ...props }) => (
+            <blockquote className="border-l-2 border-teal-500/50 pl-2.5 py-1 my-2 text-xs italic text-slate-300 bg-teal-500/5 rounded-r" {...props} />
+          ),
+          table: ({ node, ...props }) => (
+            <div className="overflow-x-auto my-2">
+              <table className="min-w-full text-xs text-left border-collapse border border-slate-800" {...props} />
+            </div>
+          ),
+          th: ({ node, ...props }) => (
+            <th className="border border-slate-800 bg-slate-900 px-2 py-1 font-semibold text-teal-300 text-[11px]" {...props} />
+          ),
+          td: ({ node, ...props }) => (
+            <td className="border border-slate-800 px-2 py-1 text-slate-300 text-[11px]" {...props} />
+          ),
+          hr: ({ node, ...props }) => (
+            <hr className="my-2 border-slate-800" {...props} />
+          ),
+          a: ({ node, ...props }) => (
+            <a className="text-teal-400 underline hover:text-teal-300 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+          )
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export default function AskAiDrawer({
   isOpen,
@@ -43,7 +122,7 @@ export default function AskAiDrawer({
       return {
         id: 'welcome-symptoms',
         role: 'assistant',
-        text: `Hello! I am your MediLogic AI Educational Assistant.\n\nI can help explain:\n• **Medical terms** (e.g., *Dyspnea*, *Phlegm*, *Wheezing*, *Myalgia*)\n• **Symptom severity levels** (Mild, Moderate, Severe)\n• **Red-flag emergency warning signs**\n\n${symCount > 0 ? `You currently have **${symCount} symptom(s)** selected.` : 'Select symptoms from the catalog or ask me any questions.'}`,
+        text: `Hello! I am your MediLogic AI Educational Assistant.\n\nI can help explain:\n- **Medical terms** (e.g., *Dyspnea*, *Phlegm*, *Wheezing*, *Myalgia*)\n- **Symptom severity levels** (Mild, Moderate, Severe)\n- **Red-flag emergency warning signs**\n\n${symCount > 0 ? `You currently have **${symCount} symptom(s)** selected.` : 'Select symptoms from the catalog or ask me any questions.'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
     }
@@ -54,7 +133,7 @@ export default function AskAiDrawer({
       return {
         id: 'welcome-results',
         role: 'assistant',
-        text: `Hello! I can explain your **${conditionName}** report in simple, everyday language.\n\nAsk me:\n• **What your report means in plain English**\n• **What the ${matchPct}% symptom match score really means**\n• **Why certain symptoms were matched or unmatched**\n• **What questions you should ask your doctor**`,
+        text: `Hello! I can explain your **${conditionName}** report in simple, everyday language.\n\nAsk me:\n- **What your report means in plain English**\n- **What the ${matchPct}% symptom match score really means**\n- **Why certain symptoms were matched or unmatched**\n- **What questions you should ask your doctor**`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
     }
@@ -342,17 +421,19 @@ export default function AskAiDrawer({
               )}
             </div>
 
-            <div
-              className={`p-3.5 rounded-2xl max-w-[92%] break-words leading-relaxed whitespace-pre-line shadow-md ${
-                msg.role === 'user'
-                  ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-br-none'
-                  : msg.isError
-                  ? 'bg-rose-950/80 border border-rose-500/40 text-rose-200 rounded-bl-none'
-                  : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none'
-              }`}
-            >
-              {msg.text}
-            </div>
+            {msg.role === 'user' ? (
+              <div className="p-3.5 rounded-2xl max-w-[92%] break-words leading-relaxed whitespace-pre-wrap shadow-md bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-br-none text-xs">
+                {msg.text}
+              </div>
+            ) : msg.isError ? (
+              <div className="p-3.5 rounded-2xl max-w-[92%] break-words leading-relaxed whitespace-pre-wrap shadow-md bg-rose-950/80 border border-rose-500/40 text-rose-200 rounded-bl-none text-xs">
+                {msg.text}
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl max-w-[92%] break-words shadow-md bg-slate-950 border border-slate-800 text-slate-200 rounded-bl-none">
+                <MarkdownMessage content={msg.text} />
+              </div>
+            )}
           </div>
         ))}
 
