@@ -30,9 +30,11 @@ export default function Navbar({ activePage, setActivePage, isAskAiOpen, onToggl
     { id: 'symptoms', label: 'Diagnose', icon: Stethoscope, requiresAuth: false },
     { id: 'history', label: 'History', icon: History, requiresAuth: true },
     { id: 'about', label: 'About & Logic', icon: Info, requiresAuth: false },
+    { id: 'admin', label: 'Admin', icon: ShieldAlert, adminOnly: true }
   ];
 
   const visibleNavItems = navItems.filter(item => {
+    if (item.adminOnly && profile?.role !== 'admin') return false;
     if (item.requiresAuth && !user) return false;
     return true;
   });
@@ -121,7 +123,9 @@ export default function Navbar({ activePage, setActivePage, isAskAiOpen, onToggl
                     <p className="font-medium text-slate-200 truncate max-w-[110px]">
                       {profile?.name || user.email?.split('@')[0]}
                     </p>
-                    <p className="text-[10px] text-teal-400/80">InsForge Auth</p>
+                    <p className="text-[10px] text-teal-400/80">
+                      {profile?.role === 'admin' ? 'Administrator' : 'InsForge Auth'}
+                    </p>
                   </div>
                 </button>
 

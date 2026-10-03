@@ -115,6 +115,7 @@ CREATE TABLE user_profiles (
   allergies TEXT,
   medical_history TEXT,
   emergency_contact TEXT,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

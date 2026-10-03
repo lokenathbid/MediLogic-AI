@@ -67,7 +67,11 @@ export default function AuthPage({ setActivePage }) {
       if (mode === 'signin') {
         const res = await signIn(email, password);
         if (res.success) {
-          setActivePage('dashboard');
+          if (res.role === 'admin') {
+            setActivePage('admin');
+          } else {
+            setActivePage('dashboard');
+          }
         }
       } else if (mode === 'signup') {
         if (!name.trim()) {

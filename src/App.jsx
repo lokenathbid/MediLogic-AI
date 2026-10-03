@@ -14,10 +14,64 @@ import ResultsPage from './pages/ResultsPage';
 import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
 import AboutPage from './pages/AboutPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 function AppContent() {
-  const { user } = useAuth();
-  const [activePage, setActivePage] = useState('landing');
+  const { user, profile, loading: authLoading } = useAuth();
+  const [activePage, setActivePage] = useState(() => {
+    const path = window.location.pathname.toLowerCase();
+    if (path === '/admin' || path === '/admin/dashboard') {
+      return 'admin';
+    }
+    return 'landing';
+  });
+
+  // Handle centralized page navigation with URL sync
+  const navigateTo = (page) => {
+    if (page === 'admin') {
+      if (!user) {
+        setActivePage('auth');
+        if (typeof window !== 'undefined') window.history.replaceState({}, '', '/');
+        return;
+      }
+      if (profile && profile.role !== 'admin') {
+        setActivePage('dashboard');
+        if (typeof window !== 'undefined') window.history.replaceState({}, '', '/');
+        return;
+      }
+      setActivePage('admin');
+      if (typeof window !== 'undefined') window.history.replaceState({}, '', '/admin');
+    } else {
+      setActivePage(page);
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/admin' || path === '/admin/dashboard') {
+          window.history.replaceState({}, '', '/');
+        }
+      }
+    }
+  };
+
+  // Only check initial direct URL access to /admin on session load
+  React.useEffect(() => {
+    if (authLoading) return;
+    const path = window.location.pathname.toLowerCase();
+    const isAdminRoute = path === '/admin' || path === '/admin/dashboard';
+
+    if (isAdminRoute) {
+      if (!user) {
+        setActivePage('auth');
+        window.history.replaceState({}, '', '/');
+      } else if (profile) {
+        if (profile.role === 'admin') {
+          setActivePage('admin');
+        } else {
+          setActivePage('dashboard');
+          window.history.replaceState({}, '', '/');
+        }
+      }
+    }
+  }, [user, profile, authLoading]);
   
   // Global Ask AI Drawer State
   const [isAskAiOpen, setIsAskAiOpen] = useState(false);
@@ -37,20 +91,20 @@ function AppContent() {
       case 'landing':
         return (
           <LandingPage 
-            setActivePage={setActivePage} 
+            setActivePage={navigateTo} 
             setSelectedSymptoms={setSelectedSymptoms} 
           />
         );
       case 'auth':
-        return <AuthPage setActivePage={setActivePage} />;
+        return <AuthPage setActivePage={navigateTo} />;
       case 'dashboard':
         return (
           <DashboardPage 
-            setActivePage={setActivePage}
+            setActivePage={navigateTo}
             setSelectedSymptoms={setSelectedSymptoms}
             setSelectedReportForView={(report) => {
               setSelectedReportForView(report);
-              setActivePage('results');
+              navigateTo('results');
             }}
           />
         );
@@ -61,7 +115,7 @@ function AppContent() {
             setSelectedSymptoms={setSelectedSymptoms}
             patientInfo={patientInfo}
             setPatientInfo={setPatientInfo}
-            setActivePage={setActivePage}
+            setActivePage={navigateTo}
           />
         );
       case 'analysis':
@@ -70,7 +124,7 @@ function AppContent() {
             selectedSymptoms={selectedSymptoms}
             patientInfo={patientInfo}
             setDiagnosticResult={setDiagnosticResult}
-            setActivePage={setActivePage}
+            setActivePage={navigateTo}
           />
         );
       case 'results':
@@ -85,26 +139,51 @@ function AppContent() {
               if (page !== 'results') {
                 setSelectedReportForView(null);
               }
-              setActivePage(page);
+              navigateTo(page);
             }}
           />
         );
       case 'history':
         return (
           <HistoryPage 
-            setActivePage={setActivePage}
+            setActivePage={navigateTo}
             setSelectedReportForView={(report) => {
               setSelectedReportForView(report);
-              setActivePage('results');
+              navigateTo('results');
             }}
           />
         );
       case 'profile':
-        return <ProfilePage setActivePage={setActivePage} />;
+        return <ProfilePage setActivePage={navigateTo} />;
       case 'about':
-        return <AboutPage setActivePage={setActivePage} />;
+        return <AboutPage setActivePage={navigateTo} />;
+      case 'admin':
+        if (!user) {
+          return <AuthPage setActivePage={navigateTo} />;
+        }
+        if (profile && profile.role !== 'admin') {
+          return (
+            <DashboardPage 
+              setActivePage={navigateTo}
+              setSelectedSymptoms={setSelectedSymptoms}
+              setSelectedReportForView={(report) => {
+                setSelectedReportForView(report);
+                navigateTo('results');
+              }}
+            />
+          );
+        }
+        return (
+          <AdminDashboardPage 
+            setActivePage={navigateTo}
+            setSelectedReportForView={(report) => {
+              setSelectedReportForView(report);
+              navigateTo('results');
+            }}
+          />
+        );
       default:
-        return <LandingPage setActivePage={setActivePage} setSelectedSymptoms={setSelectedSymptoms} />;
+        return <LandingPage setActivePage={navigateTo} setSelectedSymptoms={setSelectedSymptoms} />;
     }
   };
 
@@ -116,7 +195,7 @@ function AppContent() {
       {/* Main Top Navigation */}
       <Navbar 
         activePage={activePage} 
-        setActivePage={setActivePage} 
+        setActivePage={navigateTo} 
         isAskAiOpen={isAskAiOpen}
         onToggleAskAi={() => setIsAskAiOpen(!isAskAiOpen)}
       />
@@ -138,7 +217,7 @@ function AppContent() {
       />
 
       {/* Footer */}
-      <Footer setActivePage={setActivePage} />
+      <Footer setActivePage={navigateTo} />
     </div>
   );
 }

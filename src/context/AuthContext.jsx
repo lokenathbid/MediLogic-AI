@@ -15,6 +15,10 @@ export const AuthProvider = ({ children }) => {
       try {
         setLoading(true);
         const { data, error } = await insforge.auth.getCurrentUser();
+        const activeToken = insforge.auth?.tokenManager?.getAccessToken?.() || insforge.auth?.http?.userToken;
+        if (activeToken && typeof window !== 'undefined') {
+          sessionStorage.setItem('insforge_access_token', activeToken);
+        }
         if (data?.user) {
           setUser(data.user);
           await loadUserProfile(data.user.id);
@@ -37,9 +41,12 @@ export const AuthProvider = ({ children }) => {
       const { data } = await dbService.getUserProfile(userId);
       if (data) {
         setProfile(data);
+        return data;
       }
+      return null;
     } catch (err) {
       console.error('Failed to load profile:', err);
+      return null;
     }
   };
 
@@ -57,11 +64,21 @@ export const AuthProvider = ({ children }) => {
       }
 
       const authenticatedUser = data?.user || data;
-      setUser(authenticatedUser);
-      if (authenticatedUser?.id) {
-        await loadUserProfile(authenticatedUser.id);
+      const token = data?.accessToken || insforge.auth?.tokenManager?.getAccessToken?.() || insforge.auth?.http?.userToken;
+      if (token && typeof window !== 'undefined') {
+        sessionStorage.setItem('insforge_access_token', token);
       }
-      return { success: true, user: authenticatedUser };
+      setUser(authenticatedUser);
+      let userProfile = null;
+      if (authenticatedUser?.id) {
+        userProfile = await loadUserProfile(authenticatedUser.id);
+      }
+      return { 
+        success: true, 
+        user: authenticatedUser, 
+        profile: userProfile, 
+        role: userProfile?.role || 'user' 
+      };
     } catch (err) {
       const msg = err.message || 'Login failed';
       setAuthError(msg);
@@ -84,6 +101,10 @@ export const AuthProvider = ({ children }) => {
       }
 
       const newUser = data?.user || data;
+      const token = data?.accessToken || insforge.auth?.tokenManager?.getAccessToken?.() || insforge.auth?.http?.userToken;
+      if (token && typeof window !== 'undefined') {
+        sessionStorage.setItem('insforge_access_token', token);
+      }
       if (data?.accessToken) {
         setUser(newUser);
       }
@@ -113,6 +134,9 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('insforge_access_token');
+      }
       await insforge.auth.signOut();
     } catch (err) {
       console.error('Sign out error:', err);
@@ -143,6 +167,7 @@ export const AuthProvider = ({ children }) => {
         setUser,
         profile,
         setProfile,
+        isAdmin: profile?.role === 'admin',
         loading,
         authError,
         setAuthError,
