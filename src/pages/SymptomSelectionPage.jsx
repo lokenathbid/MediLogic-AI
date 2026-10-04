@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Stethoscope, 
@@ -29,10 +29,30 @@ export default function SymptomSelectionPage({
   const { user, profile } = useAuth();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [nameError, setNameError] = useState(false);
+  const patientNameInputRef = useRef(null);
+  const isInitialMount = useRef(true);
+
+  const registeredName = profile?.name || user?.name || user?.user_metadata?.name || '';
+
+  // Automatically populate Patient Name when the Diagnose page is opened
+  useEffect(() => {
+    if (registeredName && (!patientInfo?.name || !patientInfo.name.trim())) {
+      if (isInitialMount.current) {
+        setPatientInfo(prev => ({
+          ...prev,
+          name: registeredName,
+          age: prev?.age || profile?.age || 30,
+          gender: (prev?.gender && prev.gender !== 'Unspecified') ? prev.gender : (profile?.gender || 'Unspecified')
+        }));
+        isInitialMount.current = false;
+      }
+    }
+  }, [registeredName, profile?.age, profile?.gender]);
 
   // Default patient info if empty
   const currentPatient = patientInfo || {
-    name: profile?.name || 'Patient',
+    name: registeredName || '',
     age: profile?.age || 30,
     gender: profile?.gender || 'Unspecified'
   };
@@ -78,6 +98,12 @@ export default function SymptomSelectionPage({
 
   const handleProceedToAnalysis = () => {
     if (selectedSymptoms.length === 0) return;
+    if (!currentPatient.name || !currentPatient.name.trim()) {
+      setNameError(true);
+      patientNameInputRef.current?.focus();
+      return;
+    }
+    setNameError(false);
     setActivePage('analysis');
   };
 
@@ -114,11 +140,21 @@ export default function SymptomSelectionPage({
             <span className="font-semibold text-slate-200">Patient:</span>
           </div>
           <input
+            ref={patientNameInputRef}
             type="text"
+            required
             placeholder="Name"
             value={currentPatient.name}
-            onChange={(e) => setPatientInfo({ ...currentPatient, name: e.target.value })}
-            className="w-28 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+            onChange={(e) => {
+              if (nameError) setNameError(false);
+              setPatientInfo({ ...currentPatient, name: e.target.value });
+            }}
+            className={`w-28 px-2.5 py-1.5 rounded-lg bg-slate-900 border text-white placeholder-slate-500 focus:outline-none transition-colors ${
+              nameError 
+                ? 'border-rose-500 ring-1 ring-rose-500/50' 
+                : 'border-slate-800 focus:border-teal-500'
+            }`}
+            title="Patient Name is required"
           />
           <input
             type="number"
@@ -329,6 +365,12 @@ export default function SymptomSelectionPage({
             {/* Actions */}
             {selectedSymptoms.length > 0 && (
               <div className="pt-3 border-t border-slate-800 space-y-2">
+                {nameError && (
+                  <div className="flex items-center gap-1.5 text-rose-400 text-xs px-1 animate-pulse">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>Patient Name is required before running diagnosis.</span>
+                  </div>
+                )}
                 <button
                   onClick={handleProceedToAnalysis}
                   className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold text-sm shadow-xl shadow-teal-500/20 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"

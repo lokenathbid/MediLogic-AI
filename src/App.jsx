@@ -26,8 +26,20 @@ function AppContent() {
     return 'landing';
   });
 
-  // Handle centralized page navigation with URL sync
+  // Centralized page navigation with URL sync and patient name population
   const navigateTo = (page) => {
+    if (page === 'symptoms') {
+      const registeredName = profile?.name || user?.name || user?.user_metadata?.name;
+      if (registeredName && (!patientInfo.name || !patientInfo.name.trim())) {
+        setPatientInfo(prev => ({
+          ...prev,
+          name: registeredName,
+          age: profile?.age || prev.age || 30,
+          gender: (profile?.gender && profile.gender !== 'Unspecified') ? profile.gender : prev.gender
+        }));
+      }
+    }
+
     if (page === 'admin') {
       if (!user) {
         setActivePage('auth');
@@ -51,6 +63,19 @@ function AppContent() {
       }
     }
   };
+
+  // Synchronize registered user's name into patientInfo whenever profile or user loads
+  React.useEffect(() => {
+    const registeredName = profile?.name || user?.name || user?.user_metadata?.name;
+    if (registeredName && (!patientInfo.name || !patientInfo.name.trim())) {
+      setPatientInfo(prev => ({
+        ...prev,
+        name: registeredName,
+        age: profile?.age || prev.age || 30,
+        gender: (profile?.gender && profile.gender !== 'Unspecified') ? profile.gender : prev.gender
+      }));
+    }
+  }, [profile, user]);
 
   // Only check initial direct URL access to /admin on session load
   React.useEffect(() => {
