@@ -1,7 +1,7 @@
 #contributers-
 1.Supriyo Mondal
 2.Rajib Gorai
-3.
+3.Rocky Chowdhury
 4.
 5.
 # 🩺 MediLogic AI — Clinical Diagnosis Expert System
