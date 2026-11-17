@@ -1,3 +1,9 @@
+#contributers-
+1.
+2.Rajib Gorai
+3.
+4.
+5.
 # 🩺 MediLogic AI — Clinical Diagnosis Expert System
 
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
